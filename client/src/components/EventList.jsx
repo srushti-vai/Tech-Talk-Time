@@ -72,7 +72,7 @@ export default function EventList() {
       });
       setEvents((prevEvents) => prevEvents.filter((el) => el._id !== id));
     } catch (error) {
-      console.error("Error deleting event:", error);
+      console.error("Error deletings event:", error);
     }
   }
 
