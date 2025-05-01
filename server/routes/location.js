@@ -1,13 +1,13 @@
 import express from "express";
-import db from "../db/connection.js";
-import { ObjectId } from "mongodb";
-import { body, param, validationResult } from "express-validator"; // Import validator
+import { body, validationResult } from "express-validator";
+import mongoose from "mongoose";
+import Location from "../models/Location.js";
 
 const router = express.Router();
 
 // Middleware for validating ObjectId
 const validateObjectId = (req, res, next) => {
-  if (!ObjectId.isValid(req.params.id)) {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
     return res.status(400).json({ error: "Invalid ID format" });
   }
   next();
@@ -16,8 +16,7 @@ const validateObjectId = (req, res, next) => {
 // Get all locations
 router.get("/", async (req, res) => {
   try {
-    let collection = db.collection("locations");
-    let locations = await collection.find({}).toArray();
+    const locations = await Location.find();
     res.status(200).json(locations);
   } catch (err) {
     console.error(err);
@@ -28,12 +27,8 @@ router.get("/", async (req, res) => {
 // Get a single location by ID
 router.get("/:id", validateObjectId, async (req, res) => {
   try {
-    const locationId = new ObjectId(req.params.id);
-    let collection = db.collection("locations");
-    let location = await collection.findOne({ _id: locationId });
-
+    const location = await Location.findById(req.params.id);
     if (!location) return res.status(404).json({ error: "Location not found" });
-
     res.status(200).json(location);
   } catch (err) {
     console.error(err);
@@ -41,7 +36,7 @@ router.get("/:id", validateObjectId, async (req, res) => {
   }
 });
 
-// Create a new location (with input validation)
+// Create a new location
 router.post(
   "/",
   [
@@ -55,16 +50,13 @@ router.post(
     }
 
     try {
-      let newLocation = {
-        location_id: new ObjectId(),
+      const newLocation = new Location({
         location: req.body.location,
         capacity: req.body.capacity,
-      };
+      });
 
-      let collection = db.collection("locations");
-      let result = await collection.insertOne(newLocation);
-
-      res.status(201).json(result);
+      const savedLocation = await newLocation.save();
+      res.status(201).json(savedLocation);
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Error adding location" });
@@ -72,7 +64,7 @@ router.post(
   }
 );
 
-// Update a location by ID (with validation)
+// Update a location
 router.patch(
   "/:id",
   [
@@ -87,20 +79,21 @@ router.patch(
     }
 
     try {
-      const locationId = new ObjectId(req.params.id);
-      const updates = { $set: {} };
+      const updates = {};
+      if (req.body.location) updates.location = req.body.location;
+      if (req.body.capacity) updates.capacity = req.body.capacity;
 
-      if (req.body.location) updates.$set.location = req.body.location;
-      if (req.body.capacity) updates.$set.capacity = req.body.capacity;
+      const updatedLocation = await Location.findByIdAndUpdate(
+        req.params.id,
+        { $set: updates },
+        { new: true }
+      );
 
-      let collection = db.collection("locations");
-      let result = await collection.updateOne({ _id: locationId }, updates);
-
-      if (result.matchedCount === 0) {
+      if (!updatedLocation) {
         return res.status(404).json({ error: "Location not found" });
       }
 
-      res.status(200).json(result);
+      res.status(200).json(updatedLocation);
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Error updating location" });
@@ -108,30 +101,19 @@ router.patch(
   }
 );
 
-// Delete a location by ID (with validation)
+// Delete a location
 router.delete("/:id", validateObjectId, async (req, res) => {
   try {
-    const locationId = new ObjectId(req.params.id);
-
-    const collection = db.collection("locations");
-    const location = await collection.findOne({ _id: locationId });
-
+    const location = await Location.findById(req.params.id);
     if (!location) {
       return res.status(404).json({ error: "Location not found" });
     }
 
-    const locationIdToDelete = location.location_id;
-
-    // Delete related events safely
-    const deleteEventsResult = await db.collection("events").deleteMany({
-      location_id: locationIdToDelete,
-    });
-
-    // Delete location
-    const deleteLocationResult = await collection.deleteOne({ _id: locationId });
+    const deleteEventsResult = await Event.deleteMany({ location_id: location._id });
+    const deleteLocationResult = await Location.findByIdAndDelete(req.params.id);
 
     res.status(200).json({
-      locationDeleted: deleteLocationResult.deletedCount,
+      locationDeleted: deleteLocationResult ? 1 : 0,
       eventsDeleted: deleteEventsResult.deletedCount,
     });
   } catch (err) {
