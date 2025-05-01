@@ -95,7 +95,7 @@ export default function EventForm() {
           >
             <option value="">Select a Speaker</option>
             {speakers.map((s) => (
-              <option key={s.speaker_id} value={s.speaker_id}>
+              <option key={s._id} value={s._id}>
                 {s.name}
               </option>
             ))}
@@ -137,7 +137,7 @@ export default function EventForm() {
           >
             <option value="">Select a Location</option>
             {locations.map((l) => (
-              <option key={l.location_id} value={l.location_id}>
+              <option key={l._id} value={l._id}>
                 {l.location}
               </option>
             ))}

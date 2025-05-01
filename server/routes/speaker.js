@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import { body, validationResult } from "express-validator";
 import Speaker from "../models/Speaker.js";
+import Event from "../models/Event.js";
 
 const router = express.Router();
 
@@ -109,7 +110,7 @@ router.delete("/:id", validateObjectId, async (req, res) => {
       return res.status(404).json({ error: "Speaker not found" });
     }
 
-    const deleteEventsResult = await Event.deleteMany({ speaker_id: spekaer._id });
+    const deleteEventsResult = await Event.deleteMany({ speaker_id: speaker._id });
     const deleteSpeakerResult = await Speaker.findByIdAndDelete(req.params.id);
 
     res.status(200).json({

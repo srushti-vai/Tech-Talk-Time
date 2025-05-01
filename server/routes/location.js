@@ -2,6 +2,7 @@ import express from "express";
 import { body, validationResult } from "express-validator";
 import mongoose from "mongoose";
 import Location from "../models/Location.js";
+import Event from "../models/Event.js";
 
 const router = express.Router();
 
