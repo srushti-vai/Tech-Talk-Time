@@ -16,6 +16,10 @@ const eventSchema = new Schema(
   { timestamps: true }
 );
 
+eventSchema.index({ date: 1 });
+eventSchema.index({ speaker_id: 1 });
+eventSchema.index({ location_id: 1 });
+
 // Create the Event model
 const Event = mongoose.model('Event', eventSchema);
 

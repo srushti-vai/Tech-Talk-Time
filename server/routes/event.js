@@ -17,11 +17,29 @@ const validateObjectId = (req, res, next) => {
 // Get all events with populated speaker and location names
 router.get("/", async (req, res) => {
   try {
-    const events = await Event.find()
+    const filter = {};
+
+    // Add filters based on query params
+    if (req.query.speaker_id) {
+      filter.speaker_id = req.query.speaker_id;
+    }
+    if (req.query.location_id) {
+      filter.location_id = req.query.location_id;
+    }
+    if (req.query.date) {
+      const date = new Date(req.query.date);
+      const nextDay = new Date(date);
+      nextDay.setDate(date.getDate() + 1);
+
+      filter.date = { $gte: date, $lt: nextDay }; // match the full day
+    }
+
+    const events = await Event.find(filter)
       .populate("speaker_id", "name")
       .populate("location_id", "location")
       .sort({ date: -1 });
 
+    // Format response as before
     const formatted = events.map(e => ({
       _id: e._id,
       title: e.title,
