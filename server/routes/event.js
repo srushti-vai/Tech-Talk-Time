@@ -43,11 +43,11 @@ router.get("/", async (req, res) => {
     const formatted = events.map(e => ({
       _id: e._id,
       title: e.title,
-      speaker_name: e.speaker_id?.name || "Unknown Speaker",
+      speaker_name: e.speaker_id.name,
       date: e.date,
       duration: e.duration,
       attendees: e.attendees,
-      location_name: e.location_id?.location || "Unknown Location",
+      location_name: e.location_id.location,
       rating: e.rating,
     }));
 
