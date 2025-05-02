@@ -37,8 +37,9 @@ export default function EventList() {
   const [filters, setFilters] = useState({
     speaker_id: "",
     location_id: "",
-    date: ""
-  });
+    startDate: "",
+    endDate: ""
+  });;
 
   // Fetch all data
   useEffect(() => {
@@ -85,7 +86,8 @@ export default function EventList() {
       let query = new URLSearchParams();
       if (filters.speaker_id) query.append("speaker_id", filters.speaker_id);
       if (filters.location_id) query.append("location_id", filters.location_id);
-      if (filters.date) query.append("date", filters.date);
+      if (filters.startDate) query.append("startDate", filters.startDate);
+      if (filters.endDate) query.append("endDate", filters.endDate);
 
       const response = await fetch(`http://localhost:5050/events?${query.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch filtered events");
@@ -100,7 +102,7 @@ export default function EventList() {
 
   async function resetFilters() {
     try {
-      setFilters({ speaker_id: "", location_id: "", date: "" });
+      setFilters({ speaker_id: "", location_id: "", startDate: "", endDate: "" });
       const response = await fetch("http://localhost:5050/events");
       if (!response.ok) throw new Error("Failed to fetch all events");
       const allEvents = await response.json();
@@ -143,7 +145,7 @@ export default function EventList() {
         </div>
       </div>
 
-      {!filterOpen && (filters.speaker_id || filters.location_id || filters.date) && events.length > 0 && (
+      {!filterOpen && (filters.speaker_id || filters.location_id || filters.startDate || filters.endDate) && events.length > 0 && (
             <div className="mt-6 border rounded-lg p-4 bg-gray-50">
               <h4 className="text-lg font-semibold mb-2">Report</h4>
               <p><strong>Number of matching entries:</strong> {events.length}</p>
@@ -213,12 +215,22 @@ export default function EventList() {
             </label>
 
             <label className="block">
-              Date:
+              Start Date:
               <input
                 type="date"
                 className="w-full mt-1 border p-2 rounded"
-                value={filters.date}
-                onChange={(e) => setFilters({ ...filters, date: e.target.value })}
+                value={filters.startDate}
+                onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+              />
+            </label>
+
+            <label className="block">
+              End Date:
+              <input
+                type="date"
+                className="w-full mt-1 border p-2 rounded"
+                value={filters.endDate}
+                onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
               />
             </label>
 
@@ -226,7 +238,7 @@ export default function EventList() {
               <button
                 className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
                 onClick={() => {
-                  setFilters({ speaker_id: "", location_id: "", date: "" });
+                  setFilters({ speaker_id: "", location_id: "", startDate: "", endDate: "" });
                   setFilterOpen(false);
                 }}
               >

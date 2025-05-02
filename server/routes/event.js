@@ -26,13 +26,25 @@ router.get("/", async (req, res) => {
     if (req.query.location_id) {
       filter.location_id = req.query.location_id;
     }
-    if (req.query.date) {
-      const date = new Date(req.query.date);
-      const nextDay = new Date(date);
-      nextDay.setDate(date.getDate() + 1);
-
-      filter.date = { $gte: date, $lt: nextDay }; // match the full day
+    if (req.query.startDate || req.query.endDate) {
+      const dateFilter = {};
+      
+      if (req.query.startDate && !isNaN(Date.parse(req.query.startDate))) {
+        dateFilter.$gte = new Date(req.query.startDate);
+      }
+    
+      if (req.query.endDate && !isNaN(Date.parse(req.query.endDate))) {
+        const end = new Date(req.query.endDate);
+        end.setDate(end.getDate() + 1);
+        dateFilter.$lt = end;
+      }
+    
+      // only add to filter if at least one valid date was parsed
+      if (Object.keys(dateFilter).length > 0) {
+        filter.date = dateFilter;
+      }
     }
+    
 
     const events = await Event.find(filter)
       .populate("speaker_id", "name")
